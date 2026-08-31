@@ -105,6 +105,16 @@ Two distinct clusters emerged:
 
 High performers: study more, sleep more, use less screen time, lower stress.
 
+## 📊 Results Gallery
+
+| Correlation matrix | Study time vs score |
+|:---:|:---:|
+| ![correlation heatmap](outputs/03_correlation_heatmap.png) | ![study vs score](outputs/03_study_vs_score.png) |
+
+| Lifestyle factors vs score | Student clusters (PCA) |
+|:---:|:---:|
+| ![lifestyle vs score](outputs/03_lifestyle_vs_score.png) | ![clusters](outputs/04_pca_clusters.png) |
+
 ## Visualizations (in `outputs/`)
 
 - `02_distributions.png` / `02_categorical_counts.png` — data overview
