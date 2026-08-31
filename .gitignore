@@ -1,0 +1,16 @@
+# Kaggle dataset ignore
+kaggle.json
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+.env
+*.egg-info/
+
+# Generated outputs (keep folder, ignore contents)
+outputs/*.png
+outputs/*.csv
+outputs/*.txt
