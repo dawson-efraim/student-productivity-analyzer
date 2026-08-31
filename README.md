@@ -20,15 +20,15 @@ Analyze how factors like sleep, study time, extracurricular activities, and scre
 
 ```
 student-productivity-analyzer/
-├── data/                    # Raw dataset from Kaggle
+├── data/                     # Bundled dataset (student_data.csv)
 ├── scripts/
-│   ├── 01_download_data.py  # Fetch data from Kaggle API
-│   ├── 02_eda.py            # Exploratory Data Analysis
-│   ├── 03_correlation.py    # Correlation & non-linear patterns
-│   ├── 04_clustering.py     # K-Means student profiling
-│   └── 05_sql_analysis.py   # SQL-style group analysis
-├── outputs/                 # Generated plots and reports
-├── notebooks/               # Jupyter notebooks (future)
+│   ├── 01_data_prep.py       # Verify / regenerate the dataset
+│   ├── 02_eda.py             # Exploratory Data Analysis
+│   ├── 03_correlation.py     # Correlation & non-linear patterns
+│   ├── 04_clustering.py      # K-Means student profiling
+│   └── 05_sql_analysis.py    # SQL-style group analysis
+├── outputs/                  # Generated plots and reports
+├── notebooks/                # Jupyter notebooks (future)
 ├── requirements.txt
 └── README.md
 ```
@@ -40,41 +40,38 @@ student-productivity-analyzer/
 - **SQL (via pandasql)** — SQL queries on DataFrames
 - **Clustering** — K-Means for student profiling
 
-## 📥 Setup
+## 📥 Quick Start
+
+Everyone can run this — no Kaggle account, no API key, no download step needed.
+The CSV is already in the repo.
 
 ```bash
-# 1. Install dependencies
+# 1. Clone / download the repo, then:
 pip install -r requirements.txt
 
-# 2. Configure Kaggle API (get token from kaggle.com → Account → API)
-mkdir ~/.kaggle
-echo '{"username":"YOUR_USERNAME","key":"YOUR_KEY"}' > ~/.kaggle/kaggle.json
-
-# 3. Get the data (either option)
-# Option A — real Kaggle dataset (needs API key)
-python scripts/01_download_data.py
-# Option B — synthetic fallback (no key needed, works immediately)
-python scripts/generate_data.py
-
-# 4. Run analyses
-python scripts/02_eda.py
-python scripts/03_correlation.py
-python scripts/04_clustering.py
-python scripts/05_sql_analysis.py
+# 2. Run the analyses
+python scripts/02_eda.py          # data overview & distributions
+python scripts/03_correlation.py  # which habits matter most
+python scripts/04_clustering.py   # student profiles (K-Means)
+python scripts/05_sql_analysis.py # SQL group queries
 ```
+
+**Results:** plots land in `outputs/`, tables print in the terminal.
+
+> To regenerate the bundled dataset (for experiments), run:
+> `python scripts/generate_data.py`
 
 ## 📈 Dataset
 
-**Student Lifestyle & GPA Prediction Dataset** from Kaggle  
-([source](https://www.kaggle.com/datasets/sarveshchhetri/student-lifestyle-vs-academic-performance-dataset))
+The repo ships with `data/student_data.csv` — 1,000 records, 7 features:
+`Hours_Studied`, `Sleep_Hours`, `Screen_Time`, `Attendance`,
+`Extracurricular`, `Stress_Level`, `Final_Score`.
 
-- 8,000 student records
-- 18 features including study habits, sleep, screen time, stress, and performance
-
-> **Note:** The Kaggle dataset download requires a Kaggle API key (`kaggle.json`).
-> If you don't have one, a synthetic dataset (`scripts/generate_data.py`) is included
-> so all analyses can run immediately. To use the larger real Kaggle dataset, run
-> `01_download_data.py` after configuring your key, then re-run the analyses.
+It's a **realistic synthetic dataset**: `Final_Score` is derived from the
+lifestyle factors (study/sleep/attendance help, screen/stress hurt) plus
+injected noise, so it mirrors the patterns found in real student data
+(e.g. Kaggle's *Student Lifestyle & GPA* dataset). No credentials needed —
+fully reproducible via `scripts/generate_data.py`.
 
 ## Key Findings
 

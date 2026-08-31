@@ -1,7 +1,3 @@
-# Kaggle dataset ignore
-kaggle.json
-*.zip
-
 # Python
 __pycache__/
 *.pyc
@@ -10,7 +6,5 @@ venv/
 .env
 *.egg-info/
 
-# Generated outputs (keep folder, ignore contents)
-outputs/*.png
-outputs/*.csv
-outputs/*.txt
+# Secrets
+kaggle.json
