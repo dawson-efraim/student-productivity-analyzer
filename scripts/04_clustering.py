@@ -1,9 +1,13 @@
 """
-Script 04: Clustering — Identify Student Profiles
-- K-Means clustering on lifestyle + performance features
-- Elbow method to find optimal k
-- PCA for 2D visualization
-- Cluster profiling (summary stats per cluster)
+Script 04: Clustering — Identify Student Profiles (K-Means + PCA)
+- K-Means with elbow method
+- Exclude Final_Score from features to prevent target leakage
+- Silhouette score to validate cluster separation
+- PCA 2D projection
+- Profile each cluster by lifestyle features only
+- Derive behavioral labels from lifestyle patterns
+
+Dataset: synthetic student lifestyle data (1,000 rows).
 """
 import os
 import numpy as np
@@ -15,198 +19,217 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), "..")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Numeric lifestyle features (exclude Final_Score to avoid target leakage)
+FEATURE_NAMES = ["Hours_Studied", "Sleep_Hours", "Screen_Time", "Attendance", "Stress_Level"]
+
+# Additional categorical features to include (one-hot encoded internally)
+EXTRA_FEATURES = ["Extracurricular"]
+
 
 def load_data():
     csv_files = [f for f in os.listdir(DATA_DIR) if f.endswith(".csv")]
     if not csv_files:
-        raise FileNotFoundError(f"No CSV found in {DATA_DIR}. Run 01_download_data.py first.")
+        raise FileNotFoundError(f"No CSV found in {DATA_DIR}. Run generate_data.py first.")
     return pd.read_csv(os.path.join(DATA_DIR, csv_files[0]))
 
 
-def select_features(df):
-    """Select numeric features relevant for clustering."""
-    # Known columns from this dataset
-    feature_candidates = [
-        "Hours_Studied", "Sleep_Hours", "Screen_Time", "Attendance",
-        "Stress_Level", "Exam_Anxiety_Score", "Tutoring_Sessions_Per_Week",
-        "Previous_GPA", "Final_Score",
-    ]
-    # Fallback: use all numeric columns except IDs
-    available = [c for c in feature_candidates if c in df.columns]
-    if len(available) < 4:
-        numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
-        available = [c for c in numeric_cols if "id" not in c.lower()]
+def build_features(df):
+    """Build the feature matrix: numeric features + one-hot encoded categoricals."""
+    numeric = [c for c in FEATURE_NAMES if c in df.columns]
+    if len(numeric) < 4:
+        raise ValueError(f"Need at least 4 numeric features. Found: {numeric}")
 
-    print(f"Clustering features: {available}")
-    return available
+    X = df[numeric].copy()
+    extras = [c for c in EXTRA_FEATURES if c in df.columns]
+    if extras:
+        X = pd.concat([X, pd.get_dummies(df[extras].astype("object"), drop_first=True)], axis=1)
+
+    return X, numeric, extras
 
 
 def elbow_method(X_scaled, max_k=10):
-    """Plot inertia vs k to find optimal cluster count."""
+    """Elbow plot + silhouette-sweep for optimal k; return best k by silhouette."""
+    K_range = list(range(2, min(max_k + 1, len(X_scaled) // 10 + 1)))
     inertias = []
-    K_range = range(2, max_k + 1)
+    silhouettes = []
     for k in K_range:
         km = KMeans(n_clusters=k, random_state=42, n_init=10)
         km.fit(X_scaled)
         inertias.append(km.inertia_)
+        sil_k = silhouette_score(X_scaled, km.labels_) if 1 < k < len(X_scaled) else np.nan
+        silhouettes.append(sil_k)
 
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(K_range, inertias, "bo-", linewidth=2, markersize=8)
-    ax.set_xlabel("Number of Clusters (k)")
-    ax.set_ylabel("Inertia")
-    ax.set_title("Elbow Method — Optimal k")
-    ax.set_xticks(list(K_range))
-    ax.grid(True, alpha=0.3)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    ax1.plot(K_range, inertias, "bo-", linewidth=2, markersize=8)
+    ax1.set_xlabel("Number of Clusters (k)")
+    ax1.set_ylabel("Inertia (within-cluster sum of squares)")
+    ax1.set_title("Elbow Method", fontsize=11, fontweight="bold")
+    ax1.set_xticks(K_range)
+    ax1.grid(True, alpha=0.3)
+
+    ax2.plot(K_range, silhouettes, "gs-", linewidth=2, markersize=8)
+    ax2.set_xlabel("Number of Clusters (k)")
+    ax2.set_ylabel("Silhouette Score (higher = better)")
+    ax2.set_title("Silhouette Score by k", fontsize=11, fontweight="bold")
+    ax2.set_xticks(K_range)
+    ax2.grid(True, alpha=0.3)
+    fig.suptitle("Choosing k — Elbow vs Silhouette", fontsize=13, fontweight="bold")
     plt.tight_layout()
-    path = os.path.join(OUTPUT_DIR, "04_elbow_method.png")
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+    fig.savefig(os.path.join(OUTPUT_DIR, "04_elbow_method.png"), dpi=150)
     plt.close(fig)
-    print(f"Saved: {path}")
+    print(f"Saved: outputs/04_elbow_method.png")
 
-    # Auto-pick k: biggest drop in inertia
-    drops = [inertias[i] - inertias[i + 1] for i in range(len(inertias) - 1)]
-    best_k = list(K_range)[np.argmax(drops)]
-    print(f"Suggested k: {best_k}")
+    # Pick k with the highest silhouette score
+    sil_arr = np.array(silhouettes)
+    best_idx = int(np.nanargmax(sil_arr))
+    best_k = K_range[best_idx]
+    print(f"k candidates: {K_range}")
+    print(f"silhouettes:  {[round(s, 3) for s in silhouettes]}")
+    print(f"Best k by silhouette: {best_k} (silhouette = {sil_arr[best_idx]:.3f})")
     return best_k
 
 
-def run_clustering(df, features, k):
-    """Run K-Means and return cluster labels."""
-    X = df[features].dropna()
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+def run_clustering(df, k, X_scaled):
+    """Run K-Means on the scaled feature matrix."""
+    km = KMeans(n_clusters=k, random_state=42, n_init=20)
     labels = km.fit_predict(X_scaled)
 
-    # Map back to original df
-    df_clustered = df.loc[X.index].copy()
+    df_clustered = df.copy()
     df_clustered["Cluster"] = labels
-    return df_clustered, X_scaled, labels, km
+
+    sil = silhouette_score(X_scaled, labels) if len(set(labels)) > 1 else np.nan
+    print(f"Silhouette score: {sil:.3f}")
+
+    return df_clustered, km, labels, sil
 
 
 def plot_pca(X_scaled, labels, k):
-    """PCA scatter plot of clusters."""
-    pca = PCA(n_components=2)
+    """PCA visualization with cluster centroids."""
+    pca = PCA(n_components=2, random_state=42)
     X_pca = pca.fit_transform(X_scaled)
 
     fig, ax = plt.subplots(figsize=(10, 7))
-    scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap="Set2",
-                         alpha=0.6, s=15, edgecolors="white", linewidth=0.3)
+    sc = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap="Set2", alpha=0.6, s=15,
+                    edgecolors="white", linewidth=0.3)
 
-    # Plot centroids in PCA space
-    centroids_pca = pca.transform(km_clusterer.cluster_centers_)  # noqa: will pass from caller
+    km = KMeans(n_clusters=k, random_state=42, n_init=20)
+    km.fit(X_scaled)
+    centroids_pca = pca.transform(km.cluster_centers_)
     ax.scatter(centroids_pca[:, 0], centroids_pca[:, 1], c="black", marker="X",
                s=200, edgecolors="white", linewidth=2, zorder=10, label="Centroids")
-    ax.legend()
+    ax.legend(scatterpoints=1, frameon=False, fontsize=9)
 
-    ax.set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]:.1%} variance)")
-    ax.set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]:.1%} variance)")
-    ax.set_title("Student Profiles — PCA Visualization")
+    ax.set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]:.0%} variance)")
+    ax.set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]:.0%} variance)")
+    ax.set_title("Student Profiles — PCA Visualization (Lifestyle Features)", fontsize=11, fontweight="bold")
     plt.tight_layout()
-    path = os.path.join(OUTPUT_DIR, "04_pca_clusters.png")
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+    fig.savefig(os.path.join(OUTPUT_DIR, "04_pca_clusters.png"), dpi=150)
     plt.close(fig)
-    print(f"Saved: {path}")
+    print(f"Saved: outputs/04_pca_clusters.png")
 
 
-def profile_clusters(df_clustered, features):
-    """Print summary stats per cluster."""
-    print("\n" + "=" * 60)
-    print("CLUSTER PROFILES")
-    print("=" * 60)
+def profile_clusters(df_clustered, df):
+    """Mean per cluster for lifestyle features; behavioral labels from lifestyle patterns."""
+    lifestyle = [c for c in FEATURE_NAMES if c in df_clustered.columns]
+    if not lifestyle:
+        raise ValueError("No lifestyle features found for profiling.")
 
-    profile = df_clustered.groupby("Cluster")[features].agg(["mean", "std", "median"]).round(2)
+    mean_vals = df_clustered.groupby("Cluster")[lifestyle].mean().round(2)
+    if "Extracurricular" in df_clustered.columns:
+        ec_props = df_clustered.groupby("Cluster")["Extracurricular"].apply(
+            lambda s: (s == "Yes").mean()).round(2)
+        mean_vals["Extracurricular_%_Yes"] = ec_props
 
-    # Mean per cluster
-    mean_profile = df_clustered.groupby("Cluster")[features].mean().round(2)
-    print("\nCluster Means:")
-    print(mean_profile.to_string())
+    # Overall averages (across clusters) for reference in labeling
+    overall = mean_vals.mean(numeric_only=True)
 
-    # Size
-    sizes = df_clustered["Cluster"].value_counts().sort_index()
-    print(f"\nCluster Sizes:\n{sizes.to_string()}")
+    cluster_labels = {}
+    for cid in mean_vals.index:
+        row = mean_vals.loc[cid]
+        parts = []
+        # Study hours
+        if row["Hours_Studied"] > overall["Hours_Studied"]:
+            parts.append("High study")
+        else:
+            parts.append("Moderate/Low study")
+        # Sleep
+        if row["Sleep_Hours"] >= 7:
+            parts.append("Healthy sleep")
+        else:
+            parts.append("Short sleep")
+        # Screen time
+        if row["Screen_Time"] <= 3:
+            parts.append("Low screen")
+        else:
+            parts.append("High screen")
+        # Attendance
+        if row["Attendance"] >= 85:
+            parts.append("High attendance")
+        else:
+            parts.append("Moderate attendance")
+        # Stress
+        if row["Stress_Level"] <= 4:
+            parts.append("Low stress")
+        else:
+            parts.append("High stress")
+        cluster_labels[int(cid)] = " / ".join(parts)
 
-    # Save profile table
-    path = os.path.join(OUTPUT_DIR, "04_cluster_profiles.csv")
-    mean_profile.to_csv(path)
-    print(f"\nSaved: {path}")
+    print("\n--- Behavioral profile per cluster ---")
+    for cid, label in cluster_labels.items():
+        print(f"  Cluster {cid}: {label}")
 
-    # Bar chart comparing clusters
-    n_features = len(features)
-    fig, axes = plt.subplots(1, n_features, figsize=(4 * n_features, 5))
-    if n_features == 1:
+    # Bar chart per feature
+    n_feat = len(lifestyle)
+    fig, axes = plt.subplots(1, n_feat, figsize=(4 * n_feat, 5))
+    if n_feat == 1:
         axes = [axes]
-
-    colors = sns.color_palette("Set2", n_colors=len(mean_profile))
-
-    for i, feat in enumerate(features):
-        mean_profile[feat].plot(kind="bar", ax=axes[i], color=colors, edgecolor="white")
+    colors = sns.color_palette("Set2", n_colors=len(mean_vals))
+    for i, feat in enumerate(lifestyle):
+        mean_vals[feat].plot(kind="bar", ax=axes[i], color=colors, edgecolor="white")
         axes[i].set_title(feat, fontsize=11, fontweight="bold")
         axes[i].set_xlabel("Cluster")
         axes[i].set_ylabel("Mean Value")
         axes[i].tick_params(axis="x", rotation=0)
 
-    fig.suptitle("Cluster Comparison — Key Features", fontsize=16, fontweight="bold", y=1.03)
+    fig.suptitle("Cluster Comparison — Lifestyle Features", fontsize=14, fontweight="bold", y=1.03)
     plt.tight_layout()
-    path = os.path.join(OUTPUT_DIR, "04_cluster_comparison.png")
-    fig.savefig(path, dpi=150, bbox_inches="tight")
+    fig.savefig(os.path.join(OUTPUT_DIR, "04_cluster_comparison.png"), dpi=150)
     plt.close(fig)
-    print(f"Saved: {path}")
+    print(f"Saved: outputs/04_cluster_comparison.png")
 
+    # Save profile CSV (lifestyle means only — no Final_Score)
+    prof_path = os.path.join(OUTPUT_DIR, "04_cluster_profiles.csv")
+    mean_vals.to_csv(prof_path)
+    print(f"Saved cluster profiles CSV: {prof_path}")
 
-# Module-level var to share centroid ref
-km_clusterer = None
+    return mean_vals, cluster_labels
 
 
 def main():
-    global km_clusterer
-
     df = load_data()
-    features = select_features(df)
+    print(f"Loaded {df.shape[0]:,} records with columns: {list(df.columns)}")
 
-    X = df[features].dropna()
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    X, numeric_feats, extras = build_features(df)
+    print(f"Clustering features (numeric): {numeric_feats}")
+    if extras:
+        print(f"Encoded categorical features: {extras}")
 
-    # Elbow
+    X_scaled = StandardScaler().fit_transform(X)
+
     best_k = elbow_method(X_scaled)
+    df_clustered, km, labels, sil = run_clustering(df, best_k, X_scaled)
+    print(f"Final k = {best_k}; Silhouette = {sil:.3f}")
 
-    # Run clustering with best k
-    km = KMeans(n_clusters=best_k, random_state=42, n_init=10)
-    labels = km.fit_predict(X_scaled)
-    km_clusterer = km
+    plot_pca(X_scaled, labels, best_k)
+    mean_vals, cluster_labels = profile_clusters(df_clustered, df)
 
-    df_clustered = df.loc[X.index].copy()
-    df_clustered["Cluster"] = labels
-
-    # PCA plot
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X_scaled)
-    fig, ax = plt.subplots(figsize=(10, 7))
-    scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap="Set2",
-                         alpha=0.6, s=15, edgecolors="white", linewidth=0.3)
-    centroids_pca = pca.transform(km.cluster_centers_)
-    ax.scatter(centroids_pca[:, 0], centroids_pca[:, 1], c="black", marker="X",
-               s=200, edgecolors="white", linewidth=2, zorder=10, label="Centroids")
-    ax.legend()
-    ax.set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]:.1%} variance)")
-    ax.set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]:.1%} variance)")
-    ax.set_title("Student Profiles — PCA Visualization")
-    plt.tight_layout()
-    path = os.path.join(OUTPUT_DIR, "04_pca_clusters.png")
-    fig.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    print(f"Saved: {path}")
-
-    # Profiles
-    profile_clusters(df_clustered, features)
     print("\nClustering complete.")
 
 

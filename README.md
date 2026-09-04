@@ -117,6 +117,7 @@ Study hours dominate, but performance is a combination — the top cluster studi
 - **Pandas** — data wrangling, groupby, aggregation
 - **SQL (via pandasql)** — SQL queries on DataFrames
 - **Clustering** — K-Means for student profiling
+- **Statsmodels** — multivariate OLS regression
 
 ---
 
@@ -124,7 +125,7 @@ Study hours dominate, but performance is a combination — the top cluster studi
 
 | Dataset | Description |
 |---------|-------------|
-| `data/student_data.csv` | Realistic synthetic dataset — 1,000 records, 7 features (`Hours_Studied`, `Sleep_Hours`, `Screen_Time`, `Attendance`, `Extracurricular`, `Stress_Level`, `Final_Score`). Mirrors patterns found in Kaggle's *Student Lifestyle & GPA* dataset; fully reproducible via `scripts/generate_data.py`. |
+| `data/student_data.csv` | Realistic **synthetic** dataset — 1,000 records, 7 features (`Hours_Studied`, `Sleep_Hours`, `Screen_Time`, `Attendance`, `Extracurricular`, `Stress_Level`, `Final_Score`). The `Final_Score` was generated from the lifestyle factors with injected noise to mimic real patterns (more study → higher score, more screen time → lower score, etc). This dataset is fully reproducible via `scripts/generate_data.py`. **No external credentials or Kaggle API key is needed.**<br><br>**Limitations / Interpretation caution**: Because the target variable (`Final_Score`) is constructed from the predictor variables, observed correlations reflect the data‑generating process, not causal effects in the real world. All findings should be treated as exploratory insights into how lifestyle factors relate in this synthetic context, and they should not be generalized to actual student populations without independent validation.
 
 ---
 
