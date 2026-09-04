@@ -15,10 +15,6 @@
 
 ## 📊 Dashboard
 
-<p align="center">
-  <img src="outputs/dashboard.png" alt="Student Productivity Analysis Dashboard" width="900"/>
-</p>
-
 | Correlation matrix | Study time vs score |
 |:---:|:---:|
 | ![correlation heatmap](outputs/03_correlation_heatmap.png) | ![study vs score](outputs/03_study_vs_score.png) |
