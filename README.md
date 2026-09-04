@@ -1,81 +1,103 @@
-# Student Productivity Pattern Analyzer 🎓
+<h1 align="center">🎓 Student Productivity Pattern Analyzer</h1>
 
-Analyze how factors like sleep, study time, extracurricular activities, and screen time relate to academic performance.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/Pandas-Data%20Analysis-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="Pandas"/>
+  <img src="https://img.shields.io/badge/Matplotlib-Visualization-F1502F?style=for-the-badge&logo=matplotlib&logoColor=white" alt="Matplotlib"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
+</p>
 
-## 📊 Research Questions
+<p align="center">
+  End-to-end analysis of <b>1,000 student lifestyle records</b> — from clean synthetic data to correlation, clustering, and SQL-style insights.
+</p>
 
-1. Which habits correlate most with productivity?
-2. Is studying longer always associated with better results?
-3. Can we identify different "student profiles" using clustering?
+---
 
-## 🔍 Analyses Performed
+## 📊 Dashboard
 
-- **Exploratory Data Analysis (EDA):** Distributions, missing values, summary stats
-- **Correlation Analysis:** Which lifestyle factors correlate most with academic performance
-- **Non-Linear Patterns:** Does more study time always = better grades?
-- **Clustering (K-Means):** Identify distinct student profiles
-- **SQL Analysis:** Group-based comparisons using pandasql
+<p align="center">
+  <img src="outputs/dashboard.png" alt="Student Productivity Analysis Dashboard" width="900"/>
+</p>
 
-## 📁 Project Structure
+The dashboard above visualizes the four core analyses:
+
+| Panel | Insight |
+|-------|---------|
+| **Correlation Heatmap** | `Hours_Studied` is the strongest driver at **+0.70**; sleep helps, stress and screen time hurt |
+| **Study Time vs Score** | Top 10% study ~21.5 h/week vs ~9.5 h for bottom 10% — long hours alone don't win |
+| **Lifestyle vs Score** | Sleep and attendance lift performance; screen time and stress drag it down |
+| **Student Clusters (PCA)** | Two profiles emerge: a high performer (score 70.7) and a low performer (score 54.9) |
+
+---
+
+## 🗂 Project Structure
 
 ```
 student-productivity-analyzer/
-├── data/                     # Bundled dataset (student_data.csv)
+├── data/
+│   └── student_data.csv            # Bundled synthetic dataset (1,000 rows)
 ├── scripts/
-│   ├── 01_data_prep.py       # Verify / regenerate the dataset
-│   ├── 02_eda.py             # Exploratory Data Analysis
-│   ├── 03_correlation.py     # Correlation & non-linear patterns
-│   ├── 04_clustering.py      # K-Means student profiling
-│   └── 05_sql_analysis.py    # SQL-style group analysis
-├── outputs/                  # Generated plots and reports
-├── notebooks/                # Jupyter notebooks (future)
-├── requirements.txt
+│   ├── 01_data_prep.py             # Verify / prepare the dataset
+│   ├── 02_eda.py                   # Distributions, missing values, summary stats
+│   ├── 03_correlation.py           # Correlation & non-linear patterns
+│   ├── 04_clustering.py            # K-Means student profiling
+│   ├── 05_sql_analysis.py          # SQL-style group comparisons
+│   └── generate_data.py            # Recreate the synthetic dataset
+├── outputs/                        # Generated plots + cluster summary CSV
+│   ├── dashboard.png               # README showcase dashboard (2×2 grid)
+│   ├── 02_distributions.png
+│   ├── 03_correlation_heatmap.png
+│   ├── 03_study_vs_score.png
+│   ├── 03_lifestyle_vs_score.png
+│   ├── 04_elbow_method.png
+│   ├── 04_pca_clusters.png
+│   └── 04_cluster_profiles.csv
+├── requirements.txt                # Python dependencies
 └── README.md
 ```
 
-## 🛠️ Skills Used
+---
 
-- **Python** — pandas, matplotlib, seaborn, scikit-learn
-- **Pandas** — data wrangling, groupby, aggregation
-- **SQL (via pandasql)** — SQL queries on DataFrames
-- **Clustering** — K-Means for student profiling
-
-## 📥 Quick Start
-
-Everyone can run this — no Kaggle account, no API key, no download step needed.
-The CSV is already in the repo.
+## ⚡ Quick Start
 
 ```bash
-# 1. Clone / download the repo, then:
+# Clone
+git clone https://github.com/dawson-efraim/student-productivity-analyzer.git
+cd student-productivity-analyzer
+
+# Install
 pip install -r requirements.txt
 
-# 2. Run the analyses
-python scripts/02_eda.py          # data overview & distributions
-python scripts/03_correlation.py  # which habits matter most
-python scripts/04_clustering.py   # student profiles (K-Means)
-python scripts/05_sql_analysis.py # SQL group queries
+# Run the analyses
+python scripts/02_eda.py           # data overview & distributions
+python scripts/03_correlation.py   # which habits matter most
+python scripts/04_clustering.py    # student profiles (K-Means)
+python scripts/05_sql_analysis.py  # SQL group queries
 ```
 
-**Results:** plots land in `outputs/`, tables print in the terminal.
+Plots land in `outputs/`, tables print in the terminal. No Kaggle account, API key, or download step needed — the CSV ships with the repo.
 
-> To regenerate the bundled dataset (for experiments), run:
-> `python scripts/generate_data.py`
+---
 
-## 📈 Dataset
+## 🔧 Features
 
-The repo ships with `data/student_data.csv` — 1,000 records, 7 features:
-`Hours_Studied`, `Sleep_Hours`, `Screen_Time`, `Attendance`,
-`Extracurricular`, `Stress_Level`, `Final_Score`.
+- **Clean EDA** — distributions, missing-value checks, and summary statistics
+- **Correlation + non-linear analysis** — which habits matter, and whether more study always helps
+- **K-Means clustering** — elbow method for cluster count, PCA 2D projection, per-cluster profile table
+- **SQL analysis via pandasql** — group-based comparisons on DataFrames
+- **Reproducible synthetic dataset** — `Final_Score` derived from lifestyle factors plus noise, regenerable via `scripts/generate_data.py`
 
-It's a **realistic synthetic dataset**: `Final_Score` is derived from the
-lifestyle factors (study/sleep/attendance help, screen/stress hurt) plus
-injected noise, so it mirrors the patterns found in real student data
-(e.g. Kaggle's *Student Lifestyle & GPA* dataset). No credentials needed —
-fully reproducible via `scripts/generate_data.py`.
+---
 
-## Key Findings
+## 📈 Questions Answered
 
-### 1. Which habits correlate most with productivity?
+| # | Question | Chart |
+|---|----------|-------|
+| 1 | Which habits correlate most with productivity? | `03_correlation_heatmap.png` |
+| 2 | Is studying longer always better? | `03_study_vs_score.png` |
+| 3 | Can we identify distinct student profiles? | `04_pca_clusters.png` |
+
+### Key findings
 
 | Factor | Correlation with Final_Score |
 |--------|------------------------------|
@@ -85,46 +107,31 @@ fully reproducible via `scripts/generate_data.py`.
 | Stress_Level | −0.27 |
 | Screen_Time | −0.25 |
 
-**Study hours dominate.** Sleep and attendance help; stress and screen time hurt.
-
-### 2. Is studying longer always better?
-
-Yes, but with diminishing returns. The **Top 10%** performers study ~21.5 hrs/week
-vs ~9.5 hrs/week for the bottom 10%. But note: the top group also sleeps more (7.7h)
-and has less screen time (3.3h). Performance is a *combination* — long hours alone,
-without sleep/proper balance, doesn't produce top results.
-
-### 3. Student profiles (K-Means clustering)
-
-Two distinct clusters emerged:
+Study hours dominate, but performance is a combination — the top cluster studies more *and* sleeps more with less screen time.
 
 | Profile | Students | Avg Study | Avg Sleep | Avg Screen | Avg Score |
 |---------|----------|-----------|-----------|------------|-----------|
 | **Low performer** | 511 | 12.4h | 6.8h | 4.4h | 54.9 |
 | **High performer** | 489 | 17.9h | 7.4h | 3.6h | 70.7 |
 
-High performers: study more, sleep more, use less screen time, lower stress.
+---
 
-## 📊 Results Gallery
+## 🛠 Tech Stack
 
-| Correlation matrix | Study time vs score |
-|:---:|:---:|
-| ![correlation heatmap](outputs/03_correlation_heatmap.png) | ![study vs score](outputs/03_study_vs_score.png) |
-
-| Lifestyle factors vs score | Student clusters (PCA) |
-|:---:|:---:|
-| ![lifestyle vs score](outputs/03_lifestyle_vs_score.png) | ![clusters](outputs/04_pca_clusters.png) |
-
-## Visualizations (in `outputs/`)
-
-- `02_distributions.png` / `02_categorical_counts.png` — data overview
-- `03_correlation_heatmap.png` — correlation matrix
-- `03_study_vs_score.png` — is more studying better?
-- `03_lifestyle_vs_score.png` — sleep & screen vs performance
-- `04_elbow_method.png` — optimal cluster count
-- `04_pca_clusters.png` — clusters in 2D
-- `04_cluster_comparison.png` / `04_cluster_profiles.csv` — profile summaries
+- **Python** — pandas, matplotlib, seaborn, scikit-learn
+- **Pandas** — data wrangling, groupby, aggregation
+- **SQL (via pandasql)** — SQL queries on DataFrames
+- **Clustering** — K-Means for student profiling
 
 ---
 
-*Built as a portfolio project demonstrating Python, Pandas, SQL, and data analysis skills.*
+## 📂 Data Source
+
+| Dataset | Description |
+|---------|-------------|
+| `data/student_data.csv` | Realistic synthetic dataset — 1,000 records, 7 features (`Hours_Studied`, `Sleep_Hours`, `Screen_Time`, `Attendance`, `Extracurricular`, `Stress_Level`, `Final_Score`). Mirrors patterns found in Kaggle's *Student Lifestyle & GPA* dataset; fully reproducible via `scripts/generate_data.py`. |
+
+---
+
+<p align="center"><i>Built as part of a data science learning journey.</i></p>
+<p align="center"><sub>Raw data → Clean analysis → Polished insights</sub></p>
