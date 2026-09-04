@@ -19,14 +19,13 @@
   <img src="outputs/dashboard.png" alt="Student Productivity Analysis Dashboard" width="900"/>
 </p>
 
-The dashboard above visualizes the four core analyses:
+| Correlation matrix | Study time vs score |
+|:---:|:---:|
+| ![correlation heatmap](outputs/03_correlation_heatmap.png) | ![study vs score](outputs/03_study_vs_score.png) |
 
-| Panel | Insight |
-|-------|---------|
-| **Correlation Heatmap** | `Hours_Studied` is the strongest driver at **+0.70**; sleep helps, stress and screen time hurt |
-| **Study Time vs Score** | Top 10% study ~21.5 h/week vs ~9.5 h for bottom 10% — long hours alone don't win |
-| **Lifestyle vs Score** | Sleep and attendance lift performance; screen time and stress drag it down |
-| **Student Clusters (PCA)** | Two profiles emerge: a high performer (score 70.7) and a low performer (score 54.9) |
+| Lifestyle factors vs score | Student clusters (PCA) |
+|:---:|:---:|
+| ![lifestyle vs score](outputs/03_lifestyle_vs_score.png) | ![clusters](outputs/04_pca_clusters.png) |
 
 ---
 
